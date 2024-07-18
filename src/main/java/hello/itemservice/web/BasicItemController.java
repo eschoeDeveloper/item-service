@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -36,7 +37,7 @@ public class BasicItemController {
         return "basic/addForm";
     }
 
-    @PostMapping("/add")
+    //@PostMapping("/add")
     public String save(Model model,
       @RequestParam String itemName,
       @RequestParam Integer price,
@@ -70,7 +71,7 @@ public class BasicItemController {
     //@PostMapping("/add")
     public String saveV3(@ModelAttribute Item item ) {
 
-        itemRepository.save(item);
+        item = itemRepository.save(item);
         //model.addAttribute("item", savedItem);
 
         return "basic/item";
@@ -80,10 +81,42 @@ public class BasicItemController {
     //@PostMapping("/add")
     public String saveV4( Item item ) {
 
-        itemRepository.save(item);
+        item = itemRepository.save(item);
         //model.addAttribute("item", savedItem);
 
         return "basic/item";
+
+    }
+
+    //@PostMapping("/add")
+    public String saveV5( Item item ) {
+
+        Item reqItem = Item.builder()
+                .itemName(item.getItemName())
+                .price(item.getPrice())
+                .quantity(item.getQuantity())
+                .build();
+
+        reqItem = itemRepository.save(reqItem);
+
+        return "redirect:/basic/items/" + reqItem.getId();
+    }
+
+    @PostMapping("/add")
+    public String saveV6(Item item, RedirectAttributes redirectAttributes) {
+
+        Item reqItem = Item.builder()
+                .itemName(item.getItemName())
+                .price(item.getPrice())
+                .quantity(item.getQuantity())
+                .build();
+
+        Item savedItem = itemRepository.save(reqItem);
+
+        redirectAttributes.addAttribute("itemId", savedItem.getId());
+        redirectAttributes.addAttribute("status", true);
+
+        return "redirect:/basic/items/{itemId}";
 
     }
 
@@ -95,18 +128,9 @@ public class BasicItemController {
     }
 
     @PostMapping("/{itemId}/edit")
-    public String edit(@PathVariable Long itemId, @ModelAttribute Item item, Model model) {
+    public String edit(@PathVariable Long itemId, @ModelAttribute Item item) {
         itemRepository.update(itemId, item);
-
-        Item updateItem = Item.builder()
-                        .id(itemId)
-                        .itemName(item.getItemName())
-                        .price(item.getPrice())
-                        .quantity(item.getQuantity())
-                .build();
-
-        model.addAttribute("item", updateItem);
-        return "basic/items/{itemId}";
+        return "redirect:/basic/items/{itemId}";
     }
 
     @PostConstruct
